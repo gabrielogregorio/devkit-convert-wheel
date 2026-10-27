@@ -48,9 +48,6 @@ Tratamento com o usuário: direto. É Ubuntu, **não Windows**.
 | `Captura` | guarda o texto da área de transferência, põe sentinela, Ctrl+C falso, lê `x-special/gnome-copied-files` (ou texto), restaura o texto antigo |
 | `Roda` | janela POPUP RGBA; `zona(x,y)` → (índice, `conv`/`cfg`); parada, re-renderiza só quando muda; animada, redesenha a ~60 fps (quadro ~6 ms) |
 | extras | `Alvo(extra=True)` sai da roda principal e vai pra 2ª roda atrás da pétala `+ MAIS` (familia `menu`, func `None`); soltar/clicar nela ou parar 0,45 s em cima troca; `← VOLTAR` volta |
-| juntar | `Alvo(junta=True)` (familia `juntar`): todas as origens viram UM arquivo. `alvos_juntar(caminhos)` (2+ arquivos): imagens → lados/empilhar/grade/misturar/vídeo slideshow/GIF/PDF; imagens + 1 áudio → vídeo com música; vídeos → unir/lados (hstack, vstack, xstack); áudios → unir/misturar; PDFs (+imagens) → unir; qualquer coisa → ZIP. `destino_juntar` nomeia `<1º> - <rótulo> <sub>.ext`. `achar_alvo(caminhos, chave)` acha pelo `familia:rotulo:sub` |
-| pétala `⧉ JUNTAR` | na roda principal quando há 2+ arquivos; abre a roda de juntar (`_menu_alvo("juntar")`). Seleção de famílias misturadas: sem conversão um a um, a roda já abre nas de juntar. `disparar()` cria 1 tarefa (junta) ou 1 por arquivo |
-| `nautilus/roda_conversor_menu.py` | botão direito → "Converter para ▸" (um a um, "Juntar os N em um ▸", "Com ajustes… ▸", "Abrir a roda…"). Só monta menu e chama `roda_conversor.py --alvo=<chave> [--ajustes] arquivos`, que cai na instância que já roda. Precisa de `python3-nautilus`; o `instalar.sh` copia trocando `@DIR@`. Exceção no menu devolve `[]`: nunca derrubar o Nautilus |
 | `TelaTarefa` | uma por conversão, empilhadas no canto superior direito do monitor primário |
 | `TelaAjustes` | campos gerados das `Opcao` do alvo + nome + pasta + "lembrar ajustes" |
 | `TelaConfig` | botão (com detecção por clique), tamanho da roda, pasta fixa |
@@ -60,15 +57,8 @@ Config: `~/.config/roda-conversor/config.json` (merge sobre `PADRAO`). Log:
 
 ## Como testar depois de mexer
 
-0. `tests/rodar.sh` (unit + e2e, ~15 s, stdlib `unittest`): `unit` = motor de juntar
-   (`test_juntar`), menu do Nautilus com Nautilus **falso** (`test_menu_nautilus`), lógica da roda
-   sem janela (`test_roda_logica`); `e2e` = sobe uma roda **isolada** (`RODA_APP_ID`,
-   `RODA_CONFIG_DIR`, `RODA_LOG`, `RODA_SEM_BANDEJA=1`, config pausada) e manda `--alvo=` como o
-   menu faz. Não encosta na roda do dia a dia. Amostras geradas na hora em `tmp/teste-*`.
-
 1. `./verifica.sh` (ou `--office`): compila, renderiza a roda em PNG e roda ~33 conversões em
    amostras minúsculas em `tmp/verifica/` (ignorado pelo git). Tem que sair `OK`.
-   Juntar: rode cada `alvos_juntar` em amostras geradas por `ffmpeg -f lavfi` e PIL em `tmp/juntar/`.
 2. Reiniciar: `ferramentas/subir.sh` (script próprio, log em `tmp/app.log`; **não**
    cole `pgrep -f roda_conversor` num `bash -c`, ele mata o próprio shell, exit 144).
 3. Print das telas: `python3 ferramentas/print_telas.py` (depois do `./verifica.sh`).
@@ -77,12 +67,10 @@ Config: `~/.config/roda-conversor/config.json` (merge sobre `PADRAO`). Log:
 
 ## Armadilhas conhecidas
 
-- **Nunca usar o Nautilus real (`gi` Nautilus 4.0, `Nautilus.FileInfo`) fora do processo do
-  Nautilus.** Em 2026-10-27 isso deu segfault no python e o Ubuntu abriu o aviso de erro interno
-  (o apport ainda quebrou por cima). Teste do menu = módulo Nautilus falso.
-- **Processo filho com `stderr=PIPE` que ninguém lê trava** quando o pipe enche (64 KB). No e2e a
-  roda congelava no meio; stderr vai pra arquivo. E o `Progresso.rodar` fecha `stdout`/`stderr` do
-  ffmpeg no fim: antes cada conversão deixava 2 descritores abertos na roda.
+- `Progresso.rodar` fecha `stdout`/`stderr` do ffmpeg no fim: sem isso cada conversão deixava
+  2 descritores abertos na roda, que fica ligada o dia inteiro.
+- Escopo decidido em 2026-10-27: **só a roda**. Nada de menu no botão direito do Nautilus nem de
+  juntar vários arquivos num só (foi feito e cancelado).
 
 - **Ctrl+C falso SÓ com foco no gerenciador de arquivos** (`X11.foco()` + `e_gerenciador`), e
   uma vez só. Em 2026-10-25 a versão antiga mandava Ctrl+C pra janela focada sem conferir (e uma

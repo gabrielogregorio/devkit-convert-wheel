@@ -39,12 +39,10 @@ except (ValueError, ImportError):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import conversores as conv  # noqa: E402
 
-# RODA_* isola uma instância de teste (tests/test_e2e.py): outro app id, config e log próprios
-APP_ID = os.environ.get("RODA_APP_ID", "br.local.RodaConversora")
-CONFIG_DIR = os.environ.get("RODA_CONFIG_DIR") or os.path.expanduser("~/.config/roda-conversor")
+APP_ID = "br.local.RodaConversora"
+CONFIG_DIR = os.path.expanduser("~/.config/roda-conversor")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
-LOG_PATH = os.environ.get("RODA_LOG") or os.path.expanduser("~/.cache/roda-conversor/roda.log")
-SEM_BANDEJA = os.environ.get("RODA_SEM_BANDEJA") == "1"
+LOG_PATH = os.path.expanduser("~/.cache/roda-conversor/roda.log")
 
 PADRAO = {
     "botao": 2,                # 2 = clique da rodinha (padrão desde 2026-10-26), 8/9 = laterais
@@ -796,7 +794,6 @@ class TelaTarefa:
         self.icone.get_style_context().add_class("icone")
         topo.pack_start(self.icone, False, False, 0)
         nome = os.path.basename(origens[0].rstrip("/"))
-        nome = conv.cortar_meio(nome, 26) + (f" +{len(origens) - 1}" if len(origens) > 1 else "")
         titulo = Gtk.Label(xalign=0)
         titulo.set_markup(f"<b>{GLib.markup_escape_text(conv.cortar_meio(nome, 34))}</b>  →  "
                           f"<b>{GLib.markup_escape_text(alvo.rotulo)}</b>"
@@ -1010,8 +1007,6 @@ class TelaAjustes:
         linha = 0
         for o in alvo.opcoes:
             rot = Gtk.Label(label=o.rotulo, xalign=0)
-            if o.dica:
-                rot.set_tooltip_text(o.dica)
             g.attach(rot, 0, linha, 1, 1)
             v = op.get(o.chave, o.padrao)
             if o.tipo == "escolha":
@@ -1032,8 +1027,7 @@ class TelaAjustes:
             self.campos[o.chave] = (o, wd)
             linha += 1
 
-        destino = (conv.destino_juntar(origens, alvo, app.cfg.get("pasta_saida", "")) if alvo.junta
-                   else conv.destino_padrao(origens[0], alvo, app.cfg.get("pasta_saida", "")))
+        destino = conv.destino_padrao(origens[0], alvo, app.cfg.get("pasta_saida", ""))
         g.attach(Gtk.Separator(), 0, linha, 2, 1)
         linha += 1
         g.attach(Gtk.Label(label="Nome do arquivo", xalign=0), 0, linha, 1, 1)
@@ -1046,9 +1040,8 @@ class TelaAjustes:
         g.attach(self.pasta, 1, linha, 1, 1)
         linha += 1
         if len(origens) > 1:
-            txt = (f"{len(origens)} arquivos viram um só" if alvo.junta
-                   else f"+{len(origens) - 1} arquivo(s): mesmo ajuste, nome automático")
-            g.attach(Gtk.Label(label=txt, xalign=0), 0, linha, 2, 1)
+            g.attach(Gtk.Label(label=f"+{len(origens) - 1} arquivo(s): mesmo ajuste, nome automático",
+                               xalign=0), 0, linha, 2, 1)
             linha += 1
         self.lembrar = Gtk.CheckButton(label="Lembrar estes ajustes para o converter rápido")
         g.attach(self.lembrar, 0, linha, 2, 1)
@@ -1090,16 +1083,11 @@ class TelaAjustes:
             self.app.cfg["ajustes"][self.alvo.chave] = op
             salvar_config(self.app.cfg)
         pasta = self.pasta.get_filename() or os.path.dirname(self.origens[0])
-        padrao = (conv.destino_juntar(self.origens, self.alvo) if self.alvo.junta
-                  else conv.destino_padrao(self.origens[0], self.alvo))
-        nome = self.nome.get_text().strip() or os.path.basename(padrao)
+        nome = self.nome.get_text().strip() or os.path.basename(conv.destino_padrao(self.origens[0], self.alvo))
         base, ext = conv.separar_ext(nome)
         if ext != conv.separar_ext("x." + self.alvo.ext)[1]:
             base = nome  # tirou a extensão: devolve a certa
         self.win.destroy()
-        if self.alvo.junta:
-            TelaTarefa(self.app, list(self.origens), self.alvo, op, conv.caminho_livre(pasta, base, self.alvo.ext))
-            return
         TelaTarefa(self.app, [self.origens[0]], self.alvo, op, conv.caminho_livre(pasta, base, self.alvo.ext))
         for o in self.origens[1:]:
             TelaTarefa(self.app, [o], self.alvo, op, conv.destino_padrao(o, self.alvo, pasta))
@@ -1218,16 +1206,7 @@ class App(Gtk.Application):
                 self._pausar(True)  # autostart: sobe só o ícone (cinza), roda desligada
         caminhos = [os.path.abspath(os.path.join(cmdline.get_cwd() or ".", a)) for a in args]
         caminhos = [c for c in caminhos if os.path.exists(c)]
-        chave = next((a.split("=", 1)[1] for a in cmdline.get_arguments() if a.startswith("--alvo=")), None)
-        if caminhos and chave:  # menu do Nautilus: formato já escolhido, sem roda
-            alvo = conv.achar_alvo(caminhos, chave)
-            if alvo and "--ajustes" in cmdline.get_arguments():
-                TelaAjustes(self, caminhos, alvo)
-            elif alvo:
-                self.disparar(caminhos, alvo)
-            else:
-                log("alvo não encontrado", chave, caminhos)
-        elif caminhos:
+        if caminhos:
             GLib.timeout_add(150, self.roda_para, caminhos)
         elif "--config" in cmdline.get_arguments():
             TelaConfig(self)
@@ -1248,10 +1227,7 @@ class App(Gtk.Application):
         self.modo_clique = False  # roda aberta esperando clique esquerdo
         self.arquivos = None
         self.aplicar_botao()
-        if not SEM_BANDEJA:
-            self._criar_bandeja()
-        else:
-            self.ind = self.icone = None
+        self._criar_bandeja()
         log("iniciado, botão", self.cfg["botao"])
 
     def aplicar_botao(self):
@@ -1354,24 +1330,10 @@ class App(Gtk.Application):
         self._mostrar_alvos(caminhos)
 
     # ---- 2ª roda (extras)
-    def _menu_alvo(self, destino):
-        """Pétala que troca de roda: 'mais' (extras), 'juntar' (vários → um) ou 'voltar'."""
-        if destino == "mais":
-            a = conv.Alvo("", "menu", None, rotulo="+ MAIS", sub=f"{len(self.extras)} extras")
-        elif destino == "juntar":
-            a = conv.Alvo("", "menu", None, rotulo="⧉ JUNTAR", sub=f"{len(self.arquivos)} em 1")
-        else:
-            a = conv.Alvo("", "menu", None, rotulo="← VOLTAR", sub="principais")
-        a.destino = destino
-        return a
-
-    def _roda_principal(self):
-        alvos = list(self.principais)
-        if self.juntar:
-            alvos.append(self._menu_alvo("juntar"))
-        if self.extras:
-            alvos.append(self._menu_alvo("mais"))
-        return alvos
+    def _menu_alvo(self, mais):
+        if mais:
+            return conv.Alvo("", "menu", None, rotulo="+ MAIS", sub=f"{len(self.extras)} extras")
+        return conv.Alvo("", "menu", None, rotulo="← VOLTAR", sub="principais")
 
     def _talvez_menu(self, x, y):
         """Segurando o botão: parar ~0,45 s em cima de "+ MAIS"/"← VOLTAR" troca de roda."""
@@ -1393,26 +1355,18 @@ class App(Gtk.Application):
             self._menu_id = GLib.timeout_add(450, trocar)
 
     def _trocar_roda(self, menu):
-        destino = getattr(menu, "destino", "voltar")
-        if destino == "mais":
-            alvos = self.extras + [self._menu_alvo("voltar")]
-        elif destino == "juntar":
-            alvos = self.juntar + ([self._menu_alvo("voltar")] if self.principais or self.extras else [])
+        if menu.rotulo.startswith("+"):
+            alvos = self.extras + [self._menu_alvo(False)]
         else:
-            alvos = self._roda_principal()
+            alvos = self.principais + [self._menu_alvo(True)]
         self.roda.trocar(alvos)
 
     def _mostrar_alvos(self, caminhos):
-        self.arquivos = caminhos
-        # converter um a um só faz sentido se todos forem da mesma família (todas imagens etc.)
-        mesma = len({conv.familia_de(c) for c in caminhos}) == 1
-        todos = conv.alvos_para(caminhos[0]) if mesma else []
+        todos = conv.alvos_para(caminhos[0])
         self.principais = [a for a in todos if not a.extra]
         self.extras = [a for a in todos if a.extra]
-        self.juntar = conv.alvos_juntar(caminhos)
-        if not todos and self.juntar:  # só dá pra juntar: a roda já abre nas opções de juntar
-            self.principais, self.juntar = self.juntar, []
-        alvos = self._roda_principal()
+        alvos = self.principais + ([self._menu_alvo(True)] if self.extras else [])
+        self.arquivos = caminhos
         self.alvos = alvos
         _, ext = conv.separar_ext(caminhos[0])
         self.roda.preencher(caminhos, alvos, "" if alvos else f".{ext or '?'} sem conversão")
@@ -1444,17 +1398,9 @@ class App(Gtk.Application):
         if z == "cfg":
             TelaAjustes(self, arquivos, alvo)
             return
-        self.disparar(arquivos, alvo)
-
-    def disparar(self, arquivos, alvo):
-        """Converte com os ajustes lembrados: junta = uma tarefa com tudo; senão uma por arquivo."""
         op = alvo.padroes(self.cfg["ajustes"].get(alvo.chave))
-        pasta = self.cfg.get("pasta_saida", "")
-        if alvo.junta:
-            TelaTarefa(self, list(arquivos), alvo, op, conv.destino_juntar(arquivos, alvo, pasta))
-            return
         for a in arquivos:
-            TelaTarefa(self, [a], alvo, op, conv.destino_padrao(a, alvo, pasta))
+            TelaTarefa(self, [a], alvo, op, conv.destino_padrao(a, alvo, self.cfg.get("pasta_saida", "")))
 
     def _fechar_roda(self, i=None, zona=None):
         self.ativo = False

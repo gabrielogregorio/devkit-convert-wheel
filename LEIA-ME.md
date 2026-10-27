@@ -35,34 +35,12 @@ se der erro, fica aberta com o erro com **Como resolver**, detalhes técnicos, *
 - Conversores: `sudo apt install ffmpeg libreoffice ghostscript poppler-utils python3-pil python3-fitz python3-markdown python3-yaml python3-fonttools python3-brotli`.
   Formato sem a ferramenta instalada só não aparece na roda.
 
-## Vários arquivos de uma vez
-
-Selecione vários e abra a roda: cada formato converte **um por um**, e a pétala **⧉ JUNTAR**
-transforma tudo em **um arquivo só**:
-
-| Seleção | Juntar em |
-|---|---|
-| imagens | LADOS (lado a lado), EMPILHAR, GRADE, MISTURAR (média, sobrepor, clarear, multiplicar, diferença), VÍDEO slideshow, GIF animado, PDF |
-| imagens + 1 música | VÍDEO com a música dividida entre as imagens |
-| vídeos | UNIR (um depois do outro), LADOS (lado a lado, empilhado ou grade) |
-| áudios | UNIR ou MISTURAR |
-| PDFs (e imagens) | UNIR |
-| qualquer coisa | ZIP |
-
-Anel de fora (⚙) = presets: arranjo, colunas, tamanho, espaço, fundo, resolução (16:9, Reels,
-quadrado, 4K), segundos por imagem, fade, ordem (seleção ou nome).
-
-**Botão direito do Nautilus → "Converter para ▸"**: os mesmos formatos, "Juntar os N em um ▸",
-"Com ajustes… ▸" e "Abrir a roda…". Precisa de `sudo apt install python3-nautilus` e
-`nautilus -q` depois do `./instalar.sh`.
-
 ## Comandos
 
 ```bash
 ./instalar.sh            # menu de apps + autostart + Nautilus > Scripts > Converter (roda)
 ./instalar.sh --remover
 ./verifica.sh            # testa tudo sem abrir janela
-tests/rodar.sh           # testes unit + e2e da função juntar e do menu (tests/rodar.sh unit|e2e)
 python3 roda_conversor.py arquivo.webp   # abre a roda pra esse arquivo
 ```
 
