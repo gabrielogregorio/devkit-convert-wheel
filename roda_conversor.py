@@ -39,10 +39,12 @@ except (ValueError, ImportError):
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
 import conversores as conv  # noqa: E402
 
-APP_ID = "br.local.RodaConversora"
-CONFIG_DIR = os.path.expanduser("~/.config/roda-conversor")
+# RODA_* isola uma instância de teste (tests/test_e2e.py): outro app id, config e log próprios
+APP_ID = os.environ.get("RODA_APP_ID", "br.local.RodaConversora")
+CONFIG_DIR = os.environ.get("RODA_CONFIG_DIR") or os.path.expanduser("~/.config/roda-conversor")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
-LOG_PATH = os.path.expanduser("~/.cache/roda-conversor/roda.log")
+LOG_PATH = os.environ.get("RODA_LOG") or os.path.expanduser("~/.cache/roda-conversor/roda.log")
+SEM_BANDEJA = os.environ.get("RODA_SEM_BANDEJA") == "1"
 
 PADRAO = {
     "botao": 2,                # 2 = clique da rodinha (padrão desde 2026-10-26), 8/9 = laterais
@@ -1246,7 +1248,10 @@ class App(Gtk.Application):
         self.modo_clique = False  # roda aberta esperando clique esquerdo
         self.arquivos = None
         self.aplicar_botao()
-        self._criar_bandeja()
+        if not SEM_BANDEJA:
+            self._criar_bandeja()
+        else:
+            self.ind = self.icone = None
         log("iniciado, botão", self.cfg["botao"])
 
     def aplicar_botao(self):

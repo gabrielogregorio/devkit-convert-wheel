@@ -60,6 +60,12 @@ Config: `~/.config/roda-conversor/config.json` (merge sobre `PADRAO`). Log:
 
 ## Como testar depois de mexer
 
+0. `tests/rodar.sh` (unit + e2e, ~15 s, stdlib `unittest`): `unit` = motor de juntar
+   (`test_juntar`), menu do Nautilus com Nautilus **falso** (`test_menu_nautilus`), lógica da roda
+   sem janela (`test_roda_logica`); `e2e` = sobe uma roda **isolada** (`RODA_APP_ID`,
+   `RODA_CONFIG_DIR`, `RODA_LOG`, `RODA_SEM_BANDEJA=1`, config pausada) e manda `--alvo=` como o
+   menu faz. Não encosta na roda do dia a dia. Amostras geradas na hora em `tmp/teste-*`.
+
 1. `./verifica.sh` (ou `--office`): compila, renderiza a roda em PNG e roda ~33 conversões em
    amostras minúsculas em `tmp/verifica/` (ignorado pelo git). Tem que sair `OK`.
    Juntar: rode cada `alvos_juntar` em amostras geradas por `ffmpeg -f lavfi` e PIL em `tmp/juntar/`.
@@ -70,6 +76,13 @@ Config: `~/.config/roda-conversor/config.json` (merge sobre `PADRAO`). Log:
    na tela do usuário em uso. Peça pro usuário testar.
 
 ## Armadilhas conhecidas
+
+- **Nunca usar o Nautilus real (`gi` Nautilus 4.0, `Nautilus.FileInfo`) fora do processo do
+  Nautilus.** Em 2026-10-27 isso deu segfault no python e o Ubuntu abriu o aviso de erro interno
+  (o apport ainda quebrou por cima). Teste do menu = módulo Nautilus falso.
+- **Processo filho com `stderr=PIPE` que ninguém lê trava** quando o pipe enche (64 KB). No e2e a
+  roda congelava no meio; stderr vai pra arquivo. E o `Progresso.rodar` fecha `stdout`/`stderr` do
+  ffmpeg no fim: antes cada conversão deixava 2 descritores abertos na roda.
 
 - **Ctrl+C falso SÓ com foco no gerenciador de arquivos** (`X11.foco()` + `e_gerenciador`), e
   uma vez só. Em 2026-10-25 a versão antiga mandava Ctrl+C pra janela focada sem conferir (e uma

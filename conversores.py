@@ -99,6 +99,8 @@ class Progresso:
                 self.cancelar()
         p.wait()
         t.join(2)
+        p.stdout.close()  # sem isso cada conversão deixa 2 descritores abertos na roda (processo longo)
+        p.stderr.close()
         self._proc = None
         self.checar()
         saida = b"".join(err).decode("utf-8", "replace")

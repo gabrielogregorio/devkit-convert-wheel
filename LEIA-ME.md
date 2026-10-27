@@ -62,6 +62,7 @@ quadrado, 4K), segundos por imagem, fade, ordem (seleção ou nome).
 ./instalar.sh            # menu de apps + autostart + Nautilus > Scripts > Converter (roda)
 ./instalar.sh --remover
 ./verifica.sh            # testa tudo sem abrir janela
+tests/rodar.sh           # testes unit + e2e da função juntar e do menu (tests/rodar.sh unit|e2e)
 python3 roda_conversor.py arquivo.webp   # abre a roda pra esse arquivo
 ```
 
