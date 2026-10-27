@@ -1,17 +1,19 @@
 #!/usr/bin/env bash
 # Instala atalho no menu de apps, início automático no login e o script do Nautilus
-# (botão direito > Scripts > Converter (roda)).
+# (botão direito > Scripts > Converter (roda)) e o menu "Converter para ▸" do botão direito
+# (esse precisa de: sudo apt install python3-nautilus; depois: nautilus -q).
 # Uso: ./instalar.sh | ./instalar.sh --sem-autostart | ./instalar.sh --remover
 set -euo pipefail
 DIR="$(cd "$(dirname "$0")" && pwd)"
 APPS="$HOME/.local/share/applications/roda-conversor.desktop"
 AUTO="$HOME/.config/autostart/roda-conversor.desktop"
 SCRIPT="$HOME/.local/share/nautilus/scripts/Converter (roda)"
+EXT="$HOME/.local/share/nautilus-python/extensions/roda_conversor_menu.py"
 LIXO="$DIR/lixo"
 
 if [[ "${1:-}" == "--remover" ]]; then
   mkdir -p "$LIXO"
-  for f in "$APPS" "$AUTO" "$SCRIPT"; do [[ -e "$f" ]] && mv "$f" "$LIXO/" && echo "movido p/ lixo: $f"; done
+  for f in "$APPS" "$AUTO" "$SCRIPT" "$EXT"; do [[ -e "$f" ]] && mv "$f" "$LIXO/" && echo "movido p/ lixo: $f"; done
   echo "config continua em ~/.config/roda-conversor"
   exit 0
 fi
@@ -45,3 +47,12 @@ exec /usr/bin/python3 "$DIR/roda_conversor.py" "\${ARQS[@]}"
 SH
 chmod +x "$SCRIPT"
 echo "script do Nautilus: $SCRIPT"
+
+mkdir -p "$(dirname "$EXT")"
+sed "s|@DIR@|$DIR|" "$DIR/nautilus/roda_conversor_menu.py" > "$EXT"
+echo "menu do botão direito: $EXT"
+if ! python3 -c "import gi; gi.require_version('Nautilus', '4.0')" 2>/dev/null; then
+  echo "  falta o python3-nautilus pro menu aparecer:  sudo apt install python3-nautilus && nautilus -q"
+else
+  echo "  reabra o Nautilus pra carregar:  nautilus -q"
+fi
