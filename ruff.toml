@@ -1,0 +1,12 @@
+line-length = 120
+target-version = "py312"
+
+[lint]
+select = ["E", "F", "W", "B", "I", "UP"]
+ignore = [
+  "E731",  # small lambdas as named converters read better here
+  "B023",  # lambdas built in loops bind their value on purpose (default args)
+]
+
+[lint.isort]
+known-first-party = ["converters", "convert_wheel", "i18n"]

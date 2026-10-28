@@ -1,0 +1,61 @@
+name: Bug report
+description: Something converts wrong, the wheel misbehaves or the mouse/clipboard acts up
+labels: [bug]
+body:
+  - type: textarea
+    id: what
+    attributes:
+      label: What happened
+      description: Include the text of the error popup (the "Copy error" button copies everything).
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      placeholder: |
+        1. Hold the middle button over `photo.heic` in Nautilus
+        2. Release on JPG
+        3. ...
+    validations:
+      required: true
+  - type: textarea
+    id: expected
+    attributes:
+      label: What you expected
+    validations:
+      required: true
+  - type: input
+    id: version
+    attributes:
+      label: Version
+      description: Output of `./convert_wheel.py --version`
+      placeholder: devkit-convert-wheel 1.0.0
+    validations:
+      required: true
+  - type: dropdown
+    id: where
+    attributes:
+      label: Where the file was
+      options: [Nautilus, Desktop (DING), Nautilus script / command line, Other file manager]
+    validations:
+      required: true
+  - type: input
+    id: system
+    attributes:
+      label: System
+      description: Distro and version, desktop, session (X11/Wayland), UI language
+      placeholder: Ubuntu 24.04, GNOME, X11, pt_BR
+    validations:
+      required: true
+  - type: textarea
+    id: log
+    attributes:
+      label: Log
+      description: Last lines of `~/.cache/devkit-convert-wheel/convert-wheel.log` (check it for personal paths first)
+      render: text
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else
+      description: Screenshots, the file type, whether it happens with every file
