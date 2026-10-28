@@ -124,13 +124,31 @@ GitHub Actions, in `.github/`:
 | Workflow | When | What |
 |---|---|---|
 | `tests.yml` | push/PR to `main`, manual | unit in English **and** pt-BR, e2e in English, smoke test in Xvfb, wheel renders as artifacts; manual run can add LibreOffice |
-| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, `.sh` files executable in git, workflow YAML |
+| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, `.sh` files executable in git, actions pinned to a hash, workflow YAML |
 | `codeql-analysis.yml` | push/PR, weekly | CodeQL for Python and for the workflows |
 | `auto-complete-fields.yml` | PR opened/updated | assigns the author, labels by commit words and touched files, lists the commits in the PR body (`[...autoGenerate]`), titles it `Release vX.Y.Z - …`, fails if that version was already released |
 | `create-tag-and-release.yml` | PR merged into `main` | creates the tag `vX.Y.Z` from `VERSION` and a GitHub release with the PR text, generated notes, the source tarball and `SHA256SUMS` (a `-rc.1` style version becomes a pre-release) |
 
 `setup-environment` (composite action) installs the system Python + GTK3 stack from apt, plus the
-converters or Xvfb when a job needs them. Dependabot keeps the actions up to date monthly.
+converters or Xvfb when a job needs them.
+
+**Pinned versions.** Every third-party action is pinned to the full commit hash of its release tag,
+with the version as a comment, so a moved or hijacked tag cannot change what runs:
+
+| Action | Version | Commit |
+|---|---|---|
+| `actions/checkout` | v6.1.0 | `d23441a48e516b6c34aea4fa41551a30e30af803` |
+| `actions/upload-artifact` | v6.0.0 | `b7c566a772e6b6bfb58ed0dc250532a479d7789f` |
+| `actions/github-script` | v8.0.0 | `ed597411d8f924073f98dfc5c65a23a2325f34cd` |
+| `github/codeql-action` (init, analyze) | v4.39.1 | `9b3254085494b55a0f7c4c2b3d2d52cc712ce370` |
+
+The rest is pinned too: runners on `ubuntu-24.04` (not `ubuntu-latest`) and `ruff==0.17.3`.
+`check-quality.yml` fails if a `uses:` is not a 40-character hash (local `./` actions excepted).
+Dependabot opens a monthly PR that bumps the hash and the comment together. To pin one by hand:
+
+```bash
+git ls-remote --tags https://github.com/actions/checkout.git 'v6.1.0^{}' 'v6.1.0'   # the ^{} line is the commit
+```
 
 ### Releasing
 

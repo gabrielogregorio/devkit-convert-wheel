@@ -87,6 +87,9 @@ Config: `~/.config/devkit-convert-wheel/config.json` (merged over `DEFAULTS`). L
   fails if `VERSION` is already tagged), `create-tag-and-release.yml` (merged PR → tag `v$VERSION`
   + release with tarball and SHA256SUMS). Shared apt setup in `.github/actions/setup-environment`.
 - Release = bump `VERSION` in the PR and merge. No manual tags.
+- **Actions pinned by commit hash** (`uses: owner/repo@<40 hex> # vX.Y.Z`); the lint job fails on
+  a tag or branch ref. New action: resolve the tag with `git ls-remote --tags <repo> 'vX.Y.Z^{}'`
+  and update the table in the README. Runners stay on `ubuntu-24.04`, ruff stays `==` pinned.
 - PR text reaches the release through `env:` and a file, never `${{ }}` inside `run:` (script
   injection). Keep it that way.
 

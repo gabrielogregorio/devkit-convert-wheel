@@ -15,8 +15,7 @@ jobs:
     timeout-minutes: 5
     runs-on: ubuntu-24.04
     steps:
-      - uses: actions/checkout@v4
-
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6.1.0
       - name: Ruff
         run: pipx run ruff==0.17.3 check --output-format=github .
 
@@ -28,6 +27,14 @@ jobs:
           bad=$(git ls-files -s '*.sh' | awk '$1 != "100755" {print $4}')
           if [[ -n "$bad" ]]; then
             for f in $bad; do echo "::error file=$f::not executable in git: git update-index --chmod=+x $f"; done
+            exit 1
+          fi
+
+      - name: Actions are pinned to a commit hash
+        run: |
+          bad=$(grep -rnE '^\s*(- )?uses:\s' .github | grep -vE 'uses:\s+\./' | grep -vE '@[0-9a-f]{40}( |$)' || true)
+          if [[ -n "$bad" ]]; then
+            echo "$bad" | while IFS=: read -r f l _; do echo "::error file=$f,line=$l::pin this action to a full commit hash (# vX.Y.Z as comment)"; done
             exit 1
           fi
 
