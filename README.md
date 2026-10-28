@@ -19,12 +19,17 @@
 [![CodeQL](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/codeql-analysis.yml)
 [![Release](https://img.shields.io/github/v/release/gabrielogregorio/devkit-convert-wheel)](https://github.com/gabrielogregorio/devkit-convert-wheel/releases)
 
+<br>
+
+<img src="docs/demo.gif" alt="Holding the middle button over a PNG in Nautilus opens the wheel; releasing on WEBP creates the converted file next to it" width="480">
+
 </div>
 
 ## About
 
 Hold the **mouse wheel click** (middle button) over a file in Nautilus or on the desktop.
-A wheel with the formats that file can become shows up around the cursor.
+A wheel with the formats that file can become shows up around the cursor. Above: a PNG becomes a
+WEBP next to it, with the same name.
 
 | Where you release | What happens |
 |---|---|
@@ -65,6 +70,11 @@ Built and tested on Ubuntu 24.04 + GNOME + Nautilus. It uses the system Python, 
    ```
 4. **Turn it on:** wheel icon on the top bar → **Enabled**. Then hold the **middle button** over a
    file in Nautilus or on the desktop. To use another button: icon → Settings…
+
+   <img src="docs/tray-menu.png" alt="Top bar menu of the wheel icon: Enabled (checked), Convert file…, Settings…, Open log" width="420">
+
+   The icon is gray while off and colored when enabled. The menu follows the system language
+   (pt-BR in the screenshot: Ligada = Enabled).
 
 **Outside the repository:**
 
@@ -207,6 +217,7 @@ up off. Outside the wheel: Nautilus → right click → Scripts → Convert (whe
 | `tools/` | `restart.sh`, `smoke.sh`, `screenshots.py` |
 | `VERSION` | current version; the release workflow tags from it |
 | `.github/` | workflows, setup action, issue forms, PR template, Dependabot |
+| `docs/` | README images (demo GIF, tray menu), saved without metadata |
 
 Adding a user-facing string: write it in English inside `tr("…")` (or `tr_noop("…")` for petal
 labels) and add the pt-BR line to `PT_BR` in `i18n.py`. The unit tests fail if it is missing,
