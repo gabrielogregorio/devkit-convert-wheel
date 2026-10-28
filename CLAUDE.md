@@ -135,6 +135,11 @@ Config: `~/.config/devkit-convert-wheel/config.json` (merged over `DEFAULTS`). L
 - Wayland: none of this works (global grab and XTest are X11). It would need evdev/a portal.
 - HiDPI scale ≠ 1 was not tested.
 
+- **Tests never talk to a D-Bus that can activate services.** GTK/GIO wake portals, gvfs and the
+  keyring on the session bus; those outlive the tests and left the CI job stuck in "Cleaning up
+  orphan processes" (and made the smoke test wait ~25 s). `check.sh` runs unit/e2e with no display
+  and a dead bus address; `tools/smoke.sh` uses `tests/e2e/dbus-session.conf` (no `<servicedir>`).
+
 ## Ideas not done (only if the user asks)
 
 - Batch: hold with several files selected without losing the selection (today the fake click

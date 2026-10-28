@@ -114,6 +114,8 @@ python3 tools/screenshots.py       # screenshots of the task popup and the setti
 Tests use only the standard library (`unittest`) and the apt packages above. Lint needs `ruff` and
 `shellcheck` (`pipx install ruff`, `sudo apt install shellcheck`); the smoke test needs
 `sudo apt install xvfb dbus`. `./check.sh` skips what is not installed and says so.
+Unit and e2e run without a display and without D-Bus, and the smoke test uses its own bus that
+starts no services, so no test touches your desktop session or leaves processes behind.
 The real trigger (holding the button over a file in Nautilus) is not automated on purpose: fake
 input would click on the screen you are using.
 

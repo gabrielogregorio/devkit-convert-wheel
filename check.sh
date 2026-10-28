@@ -25,8 +25,15 @@ lint() {
   elif [[ -n "$strict" ]]; then echo "shellcheck not found"; return 1; fi
   [[ $ran == 1 ]] || echo "== lint skipped (install ruff and shellcheck to run it)"
 }
-unit() { echo "== unit"; /usr/bin/python3 -m unittest discover -s tests/unit -t . "${@}"; }
-e2e() { echo "== e2e"; /usr/bin/python3 -m unittest discover -s tests/e2e -t . -p "test_[cr]*.py" -v; }
+# No display and no D-Bus for unit/e2e: GTK/GIO would otherwise wake services (portals, gvfs) on the
+# session bus, which touch the desktop locally and outlive the job on CI.
+HEADLESS=(env -u DISPLAY -u WAYLAND_DISPLAY DBUS_SESSION_BUS_ADDRESS=unix:path=/nonexistent/bus
+          GIO_USE_VFS=local GIO_USE_VOLUME_MONITOR=unix GSETTINGS_BACKEND=memory NO_AT_BRIDGE=1)
+unit() { echo "== unit"; "${HEADLESS[@]}" /usr/bin/python3 -m unittest discover -s tests/unit -t . "${@}"; }
+e2e() {
+  echo "== e2e"
+  "${HEADLESS[@]}" /usr/bin/python3 -m unittest discover -s tests/e2e -t . -p "test_[cr]*.py" -v
+}
 smoke() { echo "== smoke"; tools/smoke.sh; }
 
 case "$STEP" in
