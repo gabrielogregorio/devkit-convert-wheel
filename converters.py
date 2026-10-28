@@ -265,7 +265,7 @@ def seconds(txt):
         parts = [float(p) for p in txt.split(":")]
     except ValueError:
         raise ConversionError(tr("Invalid time '{txt}'.").format(txt=txt),
-                              tr("Use seconds (90), mm:ss (1:30) or hh:mm:ss."))
+                              tr("Use seconds (90), mm:ss (1:30) or hh:mm:ss.")) from None
     s = 0.0
     for p in parts:
         s = s * 60 + p
@@ -353,8 +353,12 @@ def frames(im):
 
 
 def conv_image(sources, destination, op, prog, fmt):
+    with open_image(sources[0]) as source:   # closes the file: the wheel runs all day long
+        return _save_image(source, destination, op, prog, fmt)
+
+
+def _save_image(im, destination, op, prog, fmt):
     from PIL import Image, ImageOps
-    im = open_image(sources[0])
     animated = getattr(im, "n_frames", 1) > 1
     exif = im.info.get("exif") if op.get("keep_exif") else None
     prog.fraction(0.2)
@@ -406,7 +410,9 @@ def conv_image(sources, destination, op, prog, fmt):
 
 def conv_image_ffmpeg(sources, destination, op, prog, codec_args):
     """AVIF and the like: PIL cannot write it here, ffmpeg (libaom) does."""
-    im = resize(open_image(sources[0]), op)
+    with open_image(sources[0]) as source:
+        im = resize(source, op)
+        im = im.copy() if im is source else im   # the source is closed when the block ends
     with tempfile.TemporaryDirectory(prefix="convert-wheel-") as tmp:
         png = os.path.join(tmp, "in.png")
         (im.convert("RGBA") if im.mode not in ("RGB", "RGBA") else im).save(png)
@@ -714,7 +720,7 @@ def pages(spec, total):
                 out.append(int(part) - 1)
         except ValueError:
             raise ConversionError(tr("Invalid pages '{spec}'.").format(spec=spec),
-                                  tr("Use something like: 1-3,5,8-"))
+                                  tr("Use something like: 1-3,5,8-")) from None
     out = [p for p in out if 0 <= p < total]
     if not out:
         raise ConversionError(tr("No valid page in '{spec}' (the PDF has {total}).").format(spec=spec, total=total),
@@ -728,7 +734,7 @@ def open_pdf(path):
         doc = fitz.open(path)
     except Exception as e:
         raise ConversionError(tr("Could not open the PDF (corrupted?)."),
-                              tr("Open it in a PDF reader to check."), str(e))
+                              tr("Open it in a PDF reader to check."), str(e)) from e
     if doc.needs_pass:
         raise ConversionError(tr("Password-protected PDF."), tr("Remove the PDF password before converting."))
     return doc
@@ -756,7 +762,7 @@ def conv_pdf_svg(sources, destination, op, prog):
     doc = open_pdf(sources[0])
     pgs = pages(op.get("pages"), len(doc))
     outputs = files_per_page(destination, "svg", pgs)
-    for i, (p, d) in enumerate(zip(pgs, outputs)):
+    for i, (p, d) in enumerate(zip(pgs, outputs, strict=True)):
         prog.check()
         prog.text(page_text(p, len(doc)))
         with open(d, "w", encoding="utf-8") as f:
@@ -793,7 +799,7 @@ def conv_pdf_image(sources, destination, op, prog, fmt):
     if op.get("join") and len(pgs) > 1:
         return pdf_single_image(doc, pgs, zoom, destination, op, prog, fmt)
     outputs = files_per_page(destination, ext, pgs)
-    for i, (p, d) in enumerate(zip(pgs, outputs)):
+    for i, (p, d) in enumerate(zip(pgs, outputs, strict=True)):
         prog.check()
         prog.text(page_text(p, len(doc)))
         pix = doc[p].get_pixmap(matrix=fitz.Matrix(zoom, zoom), alpha=False)
@@ -1242,7 +1248,7 @@ def read_data(path):
         raise
     except Exception as e:
         raise ConversionError(tr("The .{ext} has a syntax error.").format(ext=ext),
-                              tr("Open it in an editor and fix the line shown in the details."), str(e))
+                              tr("Open it in an editor and fix the line shown in the details."), str(e)) from e
 
 
 def conv_data(sources, destination, op, prog):
@@ -1329,7 +1335,7 @@ def conv_font(sources, destination, op, prog):
     try:
         f = TTFont(sources[0])
     except Exception as e:
-        raise ConversionError(tr("Could not read the font."), tr("Corrupted or unsupported font file."), str(e))
+        raise ConversionError(tr("Could not read the font."), tr("Corrupted or unsupported font file."), str(e)) from e
     has_cff = "CFF " in f or "CFF2" in f
     if ext == "ttf" and has_cff:
         raise ConversionError(tr("This font is CFF (PostScript outlines); turning it into .ttf means converting "
@@ -1408,7 +1414,7 @@ def conv_archive(sources, destination, op, prog):
         except (zipfile.BadZipFile, tarfile.TarError, EOFError) as e:
             raise ConversionError(tr("Corrupted or password-protected archive."),
                                   tr("Try opening it in the archive manager. Password-protected zip is not "
-                                     "supported."), str(e))
+                                     "supported."), str(e)) from e
         items = []
         for d, _, fs in os.walk(tmp):
             for f in fs:
@@ -1527,18 +1533,18 @@ def convert(sources, target, op, destination, prog):
     except MemoryError:
         _cleanup(destination)
         raise ConversionError(tr("Not enough memory for this conversion."),
-                              tr("Close heavy programs or lower the resolution in ⚙."))
+                              tr("Close heavy programs or lower the resolution in ⚙.")) from None
     except OSError as e:
         _cleanup(destination)
         if e.errno == 28:
-            raise ConversionError(tr("Disk full."), tr("Free up space or pick another folder in ⚙."), str(e))
+            raise ConversionError(tr("Disk full."), tr("Free up space or pick another folder in ⚙."), str(e)) from e
         raise ConversionError(tr("File error: {error}").format(error=e.strerror or e),
-                              tr("Check permissions and disk space."), repr(e))
+                              tr("Check permissions and disk space."), repr(e)) from e
     except Exception as e:
         _cleanup(destination)
         raise ConversionError(tr("Unexpected failure: {error}").format(error=e),
                               tr("Try ⚙ with different settings, or another format. If it happens again, "
-                                 "the details below show where it broke."), traceback.format_exc())
+                                 "the details below show where it broke."), traceback.format_exc()) from e
 
 
 def _cleanup(destination):
