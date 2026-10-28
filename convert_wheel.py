@@ -41,6 +41,8 @@ import converters as conv  # noqa: E402
 from i18n import decimal, tr, tr_noop  # noqa: E402
 
 APP_ID = "io.github.gabrielogregorio.ConvertWheel"
+with open(os.path.join(os.path.dirname(os.path.abspath(__file__)), "VERSION"), encoding="utf-8") as _f:
+    VERSION = _f.read().strip()
 APP_NAME = tr("Convert Wheel")
 CONFIG_DIR = os.path.expanduser("~/.config/devkit-convert-wheel")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
@@ -1504,6 +1506,9 @@ def write_tray_icons():
 def main():
     import warnings
     warnings.filterwarnings("ignore", category=DeprecationWarning)  # Gtk.StatusIcon
+    if "--version" in sys.argv:
+        print(f"devkit-convert-wheel {VERSION}")
+        return
     GLib.set_prgname("convert-wheel")
     sys.exit(App().run(sys.argv))
 
