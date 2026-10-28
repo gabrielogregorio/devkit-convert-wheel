@@ -1412,14 +1412,19 @@ class App(Gtk.Application):
             it.connect("activate", lambda *_: cb())
             m.append(it)
 
-        enabled = Gtk.CheckMenuItem(label=tr("Enabled"))
+        # first line: name + what it is + state, like every other app icon on the bar
+        title = APP_NAME + " (" + tr("file converter") + ")"
+        status = Gtk.MenuItem(label=(tr("{app}: off") if self.cfg["paused"] else tr("{app}: on")).format(app=title))
+        status.set_sensitive(False)
+        m.append(status)
+        enabled = Gtk.CheckMenuItem(label=tr("On"))
         enabled.set_active(not self.cfg["paused"])
         enabled.connect("toggled", lambda w: self._set_paused(not w.get_active()))
         m.append(enabled)
         item(tr("Convert file…"), self._choose_file)
         item(tr("Settings…"), lambda: SettingsDialog(self))
         item(tr("Open log"), lambda: open_path(LOG_PATH) if os.path.exists(LOG_PATH) else None)
-        # no "Quit" on purpose: the icon always stays on the bar; unchecking "Enabled" turns it off
+        # no "Quit" on purpose: the icon always stays on the bar; unchecking "On" turns it off
         m.show_all()
         return m
 
@@ -1432,7 +1437,7 @@ class App(Gtk.Application):
         self.apply_button()
         if self.ind:
             self.ind.set_icon_full(self._icon_name(), self._tooltip())
-            GLib.idle_add(self._rebuild_tray_menu)  # the "Enabled" check follows the state
+            GLib.idle_add(self._rebuild_tray_menu)  # the "On" check and the status line follow the state
         if self.icon:
             self.icon.set_from_file(os.path.join(ICONS_DIR, self._icon_name() + ".svg"))
             self.icon.set_tooltip_text(self._tooltip())

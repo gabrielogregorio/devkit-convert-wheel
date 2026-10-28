@@ -68,13 +68,13 @@ Built and tested on Ubuntu 24.04 + GNOME + Nautilus. It uses the system Python, 
    ./install.sh     # app menu entry + start at login (comes up off) + Nautilus > Scripts
    ./check.sh       # must end with OK (./check.sh --office also tests LibreOffice)
    ```
-4. **Turn it on:** wheel icon on the top bar → **Enabled**. Then hold the **middle button** over a
+4. **Turn it on:** wheel icon on the top bar → **On**. Then hold the **middle button** over a
    file in Nautilus or on the desktop. To use another button: icon → Settings…
 
-   <img src="docs/tray-menu.png" alt="Top bar menu of the wheel icon: Enabled (checked), Convert file…, Settings…, Open log" width="420">
+   <img src="docs/tray-menu.png" alt="Top bar menu of the wheel icon: On (checked), Convert file…, Settings…, Open log" width="420">
 
    The icon is gray while off and colored when enabled. The menu follows the system language
-   (pt-BR in the screenshot: Ligada = Enabled).
+   (pt-BR in the screenshot: Ligada = On).
 
 **Outside the repository:**
 
@@ -200,7 +200,8 @@ Issues use forms (`bug_report.yml`, `feature_request.yml`); PRs start from `pull
 
 ## Usage
 
-Top bar icon (colored = enabled, gray = off): **Enabled**, Convert file…, Settings… (pick the
+Top bar icon (colored = on, gray = off): a first line with the name, what it is and the state
+("Convert Wheel (file converter): on"), then **On**, Convert file…, Settings… (pick the
 button), Open log. There is no "Quit": the icon always stays on the bar and at login the wheel comes
 up off. Outside the wheel: Nautilus → right click → Scripts → Convert (wheel).
 
