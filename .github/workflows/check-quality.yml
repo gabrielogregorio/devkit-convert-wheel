@@ -1,0 +1,27 @@
+name: check lint
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+
+permissions:
+  contents: read
+
+jobs:
+  lint:
+    name: Lint (ruff + shellcheck)
+    timeout-minutes: 5
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Ruff
+        run: pipx run ruff==0.17.3 check --output-format=github .
+
+      - name: ShellCheck
+        run: shellcheck --severity=warning ./*.sh tools/*.sh
+
+      - name: Workflow files are valid YAML
+        run: python3 -c "import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" .github/workflows/*.yml .github/ISSUE_TEMPLATE/*.yml .github/actions/*/action.yml

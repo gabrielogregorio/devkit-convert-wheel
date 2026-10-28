@@ -65,19 +65,36 @@ Config: `~/.config/devkit-convert-wheel/config.json` (merged over `DEFAULTS`). L
 
 ## How to test after a change
 
-1. `./check.sh` (or `--office`): compiles, checks translations, renders the wheel to PNG and
-   runs ~40 conversions on tiny samples in `tmp/check/` (ignored by git). It must end with `OK`.
-   Run it once more with `CONVERT_WHEEL_LANG=en` when strings change.
-2. Restart: `tools/restart.sh` (own script, log in `tmp/app.log`; **do not** put
+1. `./check.sh`: lint (ruff + shellcheck, skipped if missing), unit (`tests/unit`), e2e
+   (`tests/e2e`: ~40 conversions on tiny samples in `tmp/check/`, wheel render, frame < 16 ms) and
+   smoke (`tools/smoke.sh`: the real app in Xvfb + its own D-Bus + throwaway `HOME`). It must end
+   with `OK`. One step only: `./check.sh unit|e2e|lint|smoke`; `--office` adds LibreOffice.
+   Run with `CONVERT_WHEEL_LANG=en` too when UI strings change. Tests are stdlib `unittest`
+   on `/usr/bin/python3` (the app needs the apt `gi`), never pytest/pip.
+2. **Never start the app against the real desktop from a test**: a second process forwards its
+   command line to the running instance and grabs the user's mouse. The smoke test only runs
+   inside `tools/smoke.sh`.
+3. Restart the real one: `tools/restart.sh` (own script, log in `tmp/app.log`; **do not** put
    `pgrep -f convert_wheel` inside a `bash -c`: it matches and kills its own shell, exit 144).
-3. Screenshots: `python3 tools/screenshots.py` (after `./check.sh`).
-4. The real trigger (physical button + Nautilus) **cannot** be tested by script: fake XTest
+4. Screenshots: `python3 tools/screenshots.py` (after `./check.sh e2e`, which creates the samples).
+5. The real trigger (physical button + Nautilus) **cannot** be tested by script: fake XTest
    events would click on the screen the user is working on. Ask the user to test it.
+
+## CI/CD and releases
+
+- `.github/workflows/`: `tests.yml` (unit + e2e in en and pt-BR, smoke), `check-quality.yml`
+  (lint), `codeql-analysis.yml`, `auto-complete-fields.yml` (PR assign/labels/changelog/title,
+  fails if `VERSION` is already tagged), `create-tag-and-release.yml` (merged PR → tag `v$VERSION`
+  + release with tarball and SHA256SUMS). Shared apt setup in `.github/actions/setup-environment`.
+- Release = bump `VERSION` in the PR and merge. No manual tags.
+- PR text reaches the release through `env:` and a file, never `${{ }}` inside `run:` (script
+  injection). Keep it that way.
 
 ## Known pitfalls
 
 - `Progress.run` closes ffmpeg's `stdout`/`stderr` at the end: without it every conversion left
-  2 open descriptors in the wheel, which stays on all day.
+  2 open descriptors in the wheel, which stays on all day. Same for images: `conv_image` and
+  `conv_image_ffmpeg` open the source in a `with` block (an animated GIF kept its file open).
 - Scope decided on 2026-10-27: **only the wheel**. No Nautilus right-click menu and no joining
   several files into one (it was built and cancelled).
 - **Fake Ctrl+C ONLY with focus on the file manager** (`X11.focused()` + `is_file_manager`), and

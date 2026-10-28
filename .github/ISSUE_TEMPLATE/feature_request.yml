@@ -1,0 +1,28 @@
+name: Feature request
+description: A new format, a new setting or a change in how the wheel works
+labels: [enhancement]
+body:
+  - type: textarea
+    id: problem
+    attributes:
+      label: The problem
+      description: What you are trying to do and what gets in the way today
+    validations:
+      required: true
+  - type: textarea
+    id: solution
+    attributes:
+      label: The solution you would like
+      description: e.g. "PDF → EPUB on the extras wheel", "remember the last output folder"
+    validations:
+      required: true
+  - type: textarea
+    id: tools
+    attributes:
+      label: Tools it would need
+      description: The project only uses apt packages, no pip. Which package would do the conversion?
+      placeholder: sudo apt install ...
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives considered

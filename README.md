@@ -14,6 +14,11 @@
 ![Languages](https://img.shields.io/badge/UI-en%20%7C%20pt--BR-555555?style=for-the-badge)
 ![License](https://img.shields.io/badge/license-MIT-blue?style=for-the-badge)
 
+[![Tests](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/tests.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/tests.yml)
+[![Lint](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/check-quality.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/check-quality.yml)
+[![CodeQL](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/codeql-analysis.yml/badge.svg)](https://github.com/gabrielogregorio/devkit-convert-wheel/actions/workflows/codeql-analysis.yml)
+[![Release](https://img.shields.io/github/v/release/gabrielogregorio/devkit-convert-wheel)](https://github.com/gabrielogregorio/devkit-convert-wheel/releases)
+
 </div>
 
 ## About
@@ -88,12 +93,51 @@ tools/restart.sh                   # restarts in the background (log in tmp/app.
 ./install.sh --no-autostart
 ./install.sh --remove              # moves the entries to trash/, keeps the config
 
-# Test (no window: renders the wheel and converts tiny samples)
-./check.sh
-./check.sh --office                # adds conversions through LibreOffice
+# Test (never touches the running desktop)
+./check.sh                         # lint + unit + e2e + smoke, ends with OK
+./check.sh unit                    # or: lint | e2e | smoke
+./check.sh e2e --office            # e2e also converts through LibreOffice
+CONVERT_WHEEL_LANG=en ./check.sh   # same checks with the English interface
 python3 tools/screenshots.py       # screenshots of the task popup and the settings dialog
-CONVERT_WHEEL_LANG=en ./check.sh   # same check with the English interface
+./convert_wheel.py --version
 ```
+
+## Tests
+
+| Kind | Where | What it covers |
+|---|---|---|
+| **Lint** | `ruff.toml`, ShellCheck | Python style, import order, bug patterns; warnings in every `.sh` |
+| **Unit** | `tests/unit/` | language detection and the pt-BR catalog, file names and numbering, time and page parsing, error rules, targets per file type (unique settings keys, valid defaults), wheel zones and SVG, clipboard paths |
+| **E2E** | `tests/e2e/test_conversions.py`, `test_render.py` | ~40 real conversions on tiny samples, numbering, friendly error on a fake file, wheel render through GdkPixbuf and frame time (< 16 ms) |
+| **Smoke** | `tests/e2e/test_app.py` via `tools/smoke.sh` | starts the real app in Xvfb with its own D-Bus session and a throwaway `HOME`: comes up off, writes config and tray icons, a 2nd launch hands over to the 1st |
+
+Tests use only the standard library (`unittest`) and the apt packages above. Lint needs `ruff` and
+`shellcheck` (`pipx install ruff`, `sudo apt install shellcheck`); the smoke test needs
+`sudo apt install xvfb dbus`. `./check.sh` skips what is not installed and says so.
+The real trigger (holding the button over a file in Nautilus) is not automated on purpose: fake
+input would click on the screen you are using.
+
+## CI/CD
+
+GitHub Actions, in `.github/`:
+
+| Workflow | When | What |
+|---|---|---|
+| `tests.yml` | push/PR to `main`, manual | unit and e2e in English **and** pt-BR, smoke test in Xvfb, wheel renders as artifacts; manual run can add LibreOffice |
+| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, workflow YAML |
+| `codeql-analysis.yml` | push/PR, weekly | CodeQL for Python and for the workflows |
+| `auto-complete-fields.yml` | PR opened/updated | assigns the author, labels by commit words and touched files, lists the commits in the PR body (`[...autoGenerate]`), titles it `Release vX.Y.Z - …`, fails if that version was already released |
+| `create-tag-and-release.yml` | PR merged into `main` | creates the tag `vX.Y.Z` from `VERSION` and a GitHub release with the PR text, generated notes, the source tarball and `SHA256SUMS` (a `-rc.1` style version becomes a pre-release) |
+
+`setup-environment` (composite action) installs the system Python + GTK3 stack from apt, plus the
+converters or Xvfb when a job needs them. Dependabot keeps the actions up to date monthly.
+
+### Releasing
+
+1. In the PR, bump `VERSION` (semver: `1.1.0`, or `1.1.0-rc.1` for a pre-release).
+2. Merge into `main`. The tag and the release are created on their own.
+
+Issues use forms (`bug_report.yml`, `feature_request.yml`); PRs start from `pull_request_template.md`.
 
 ## What it converts
 
@@ -125,11 +169,15 @@ up off. Outside the wheel: Nautilus → right click → Scripts → Convert (whe
 | `converters.py` | conversion engine without GTK: targets per file type, `convert()`, friendly errors |
 | `i18n.py` | language detection and the pt-BR catalog (English is the source text) |
 | `install.sh` | menu entry, autostart and Nautilus script |
-| `check.sh` | headless check: compile, translations, wheel render, ~40 sample conversions |
-| `tools/` | `restart.sh` and `screenshots.py` |
+| `check.sh` | runs lint, unit, e2e and smoke, the same steps as the CI |
+| `tests/` | `unit/` and `e2e/` (`unittest`, no pip) |
+| `tools/` | `restart.sh`, `smoke.sh`, `screenshots.py` |
+| `VERSION` | current version; the release workflow tags from it |
+| `.github/` | workflows, setup action, issue forms, PR template, Dependabot |
 
 Adding a user-facing string: write it in English inside `tr("…")` (or `tr_noop("…")` for petal
-labels) and add the pt-BR line to `PT_BR` in `i18n.py`. `./check.sh` fails if it is missing.
+labels) and add the pt-BR line to `PT_BR` in `i18n.py`. The unit tests fail if it is missing,
+if the `{placeholders}` differ or if a pt-BR line is no longer used.
 
 ## Limitations
 

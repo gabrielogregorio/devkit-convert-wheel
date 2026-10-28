@@ -1,0 +1,86 @@
+name: Tests Pipeline
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      office:
+        description: 'Also convert through LibreOffice (slow: installs libreoffice)'
+        type: boolean
+        default: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  unit:
+    name: Unit Tests (${{ matrix.ui }})
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ui: [en, pt_BR]
+    env:
+      CONVERT_WHEEL_LANG: ${{ matrix.ui }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-environment
+
+      - name: Run unit tests
+        run: ./check.sh unit
+
+  e2e:
+    name: E2E Tests (${{ matrix.ui }})
+    needs: unit
+    timeout-minutes: 15
+    runs-on: ubuntu-24.04
+    strategy:
+      fail-fast: false
+      matrix:
+        ui: [en, pt_BR]
+    env:
+      CONVERT_WHEEL_LANG: ${{ matrix.ui }}
+      CONVERT_WHEEL_FRAME_LIMIT_MS: '40'   # shared runners are slower than a desktop
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-environment
+        with:
+          converters: 'true'
+
+      - name: Install LibreOffice
+        if: ${{ inputs.office }}
+        run: sudo apt-get install -y -qq --no-install-recommends libreoffice-writer libreoffice-calc > /dev/null
+
+      - name: Run conversions and wheel render
+        run: ./check.sh e2e ${{ inputs.office && '--office' || '' }}
+
+      - name: Upload wheel renders
+        if: ${{ !cancelled() }}
+        uses: actions/upload-artifact@v4
+        with:
+          name: wheel-renders-${{ matrix.ui }}
+          path: tmp/check/*.png
+          if-no-files-found: ignore
+          retention-days: 14
+
+  smoke:
+    name: App smoke test (Xvfb)
+    needs: unit
+    timeout-minutes: 10
+    runs-on: ubuntu-24.04
+    steps:
+      - uses: actions/checkout@v4
+      - uses: ./.github/actions/setup-environment
+        with:
+          smoke: 'true'
+
+      - name: Start the app in an isolated X server
+        run: ./check.sh smoke
