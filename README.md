@@ -46,8 +46,8 @@ Feito e testado em Ubuntu 24.04 + GNOME + Nautilus. Usa o Python do sistema: nad
    Falta uma ferramenta? Só os formatos dela somem da roda (ex.: sem `libreoffice`, nada de Office).
 3. Clonar e instalar:
    ```bash
-   git clone <url-do-repo> devkit-roda-conversor
-   cd devkit-roda-conversor
+   git clone <url-do-repo> devkit-convert-wheel
+   cd devkit-convert-wheel
    ./instalar.sh        # menu de apps + início no login (sobe desligada) + Nautilus > Scripts
    ./verifica.sh        # tem que terminar em OK (./verifica.sh --office testa o LibreOffice)
    ```
