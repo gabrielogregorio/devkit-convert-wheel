@@ -123,8 +123,8 @@ GitHub Actions, in `.github/`:
 
 | Workflow | When | What |
 |---|---|---|
-| `tests.yml` | push/PR to `main`, manual | unit and e2e in English **and** pt-BR, smoke test in Xvfb, wheel renders as artifacts; manual run can add LibreOffice |
-| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, workflow YAML |
+| `tests.yml` | push/PR to `main`, manual | unit in English **and** pt-BR, e2e in English, smoke test in Xvfb, wheel renders as artifacts; manual run can add LibreOffice |
+| `check-quality.yml` | push/PR to `main` | ruff, ShellCheck, `.sh` files executable in git, workflow YAML |
 | `codeql-analysis.yml` | push/PR, weekly | CodeQL for Python and for the workflows |
 | `auto-complete-fields.yml` | PR opened/updated | assigns the author, labels by commit words and touched files, lists the commits in the PR body (`[...autoGenerate]`), titles it `Release vX.Y.Z - …`, fails if that version was already released |
 | `create-tag-and-release.yml` | PR merged into `main` | creates the tag `vX.Y.Z` from `VERSION` and a GitHub release with the PR text, generated notes, the source tarball and `SHA256SUMS` (a `-rc.1` style version becomes a pre-release) |

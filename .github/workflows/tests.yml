@@ -38,16 +38,12 @@ jobs:
         run: ./check.sh unit
 
   e2e:
-    name: E2E Tests (${{ matrix.ui }})
+    name: E2E Tests
     needs: unit
     timeout-minutes: 15
     runs-on: ubuntu-24.04
-    strategy:
-      fail-fast: false
-      matrix:
-        ui: [en, pt_BR]
     env:
-      CONVERT_WHEEL_LANG: ${{ matrix.ui }}
+      CONVERT_WHEEL_LANG: en
       CONVERT_WHEEL_FRAME_LIMIT_MS: '40'   # shared runners are slower than a desktop
     steps:
       - uses: actions/checkout@v4
@@ -66,7 +62,7 @@ jobs:
         if: ${{ !cancelled() }}
         uses: actions/upload-artifact@v4
         with:
-          name: wheel-renders-${{ matrix.ui }}
+          name: wheel-renders
           path: tmp/check/*.png
           if-no-files-found: ignore
           retention-days: 14

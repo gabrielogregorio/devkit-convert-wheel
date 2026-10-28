@@ -23,5 +23,13 @@ jobs:
       - name: ShellCheck
         run: shellcheck --severity=warning ./*.sh tools/*.sh
 
+      - name: Scripts are executable in git
+        run: |
+          bad=$(git ls-files -s '*.sh' | awk '$1 != "100755" {print $4}')
+          if [[ -n "$bad" ]]; then
+            for f in $bad; do echo "::error file=$f::not executable in git: git update-index --chmod=+x $f"; done
+            exit 1
+          fi
+
       - name: Workflow files are valid YAML
         run: python3 -c "import sys, yaml; [yaml.safe_load(open(f)) for f in sys.argv[1:]]" .github/workflows/*.yml .github/ISSUE_TEMPLATE/*.yml .github/actions/*/action.yml

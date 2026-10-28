@@ -82,7 +82,7 @@ Config: `~/.config/devkit-convert-wheel/config.json` (merged over `DEFAULTS`). L
 
 ## CI/CD and releases
 
-- `.github/workflows/`: `tests.yml` (unit + e2e in en and pt-BR, smoke), `check-quality.yml`
+- `.github/workflows/`: `tests.yml` (unit in en and pt-BR, e2e in en, smoke), `check-quality.yml`
   (lint), `codeql-analysis.yml`, `auto-complete-fields.yml` (PR assign/labels/changelog/title,
   fails if `VERSION` is already tagged), `create-tag-and-release.yml` (merged PR → tag `v$VERSION`
   + release with tarball and SHA256SUMS). Shared apt setup in `.github/actions/setup-environment`.
