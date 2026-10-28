@@ -42,10 +42,10 @@ from i18n import decimal, tr, tr_noop  # noqa: E402
 
 APP_ID = "io.github.gabrielogregorio.ConvertWheel"
 APP_NAME = tr("Convert Wheel")
-CONFIG_DIR = os.path.expanduser("~/.config/convert-wheel")
+CONFIG_DIR = os.path.expanduser("~/.config/devkit-convert-wheel")
 CONFIG_PATH = os.path.join(CONFIG_DIR, "config.json")
-LOG_PATH = os.path.expanduser("~/.cache/convert-wheel/convert-wheel.log")
-ICONS_DIR = os.path.expanduser("~/.cache/convert-wheel/icons")
+LOG_PATH = os.path.expanduser("~/.cache/devkit-convert-wheel/convert-wheel.log")
+ICONS_DIR = os.path.expanduser("~/.cache/devkit-convert-wheel/icons")
 
 DEFAULTS = {
     "button": 2,               # 2 = wheel click (middle), 8/9 = side buttons

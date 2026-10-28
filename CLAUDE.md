@@ -60,8 +60,8 @@ Be direct with the user. The target is Ubuntu, **not Windows**.
 | `AdjustDialog` | fields generated from the target `Option`s + name + folder + "remember settings" |
 | `SettingsDialog` | button (with click detection), wheel size, fixed output folder |
 
-Config: `~/.config/convert-wheel/config.json` (merged over `DEFAULTS`). Log:
-`~/.cache/convert-wheel/convert-wheel.log`. Tray icons: `~/.cache/convert-wheel/icons/`.
+Config: `~/.config/devkit-convert-wheel/config.json` (merged over `DEFAULTS`). Log:
+`~/.cache/devkit-convert-wheel/convert-wheel.log`. Tray icons: `~/.cache/devkit-convert-wheel/icons/`.
 
 ## How to test after a change
 
@@ -126,6 +126,6 @@ Config: `~/.config/convert-wheel/config.json` (merged over `DEFAULTS`). Log:
 ## Tray icon and on/off
 
 - Own icon on the bar: 6-slice wheel with an arrow (SVG generated in
-  `~/.cache/convert-wheel/icons/`), colored = enabled, gray = paused.
+  `~/.cache/devkit-convert-wheel/icons/`), colored = enabled, gray = paused.
 - **No "Quit" item**: the icon always stays on the bar; turning off = unchecking "Enabled"
   (`cfg["paused"]`). Autostart runs with `--off` (comes up paused).

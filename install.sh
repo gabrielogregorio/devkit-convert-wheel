@@ -16,7 +16,7 @@ if [[ "${1:-}" == "--remove" ]]; then
   for f in "$APPS" "$AUTO" "$SCRIPTS/Converter (roda)" "$SCRIPTS/Convert (wheel)"; do
     [[ -e "$f" ]] && mv "$f" "$TRASH/" && echo "moved to trash/: $f"
   done
-  echo "the config stays in ~/.config/convert-wheel"
+  echo "the config stays in ~/.config/devkit-convert-wheel"
   exit 0
 fi
 

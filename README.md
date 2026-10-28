@@ -65,8 +65,8 @@ Built and tested on Ubuntu 24.04 + GNOME + Nautilus. It uses the system Python, 
 
 | Path | What |
 |---|---|
-| `~/.config/convert-wheel/config.json` | button, wheel size, output folder, remembered settings |
-| `~/.cache/convert-wheel/` | log (`convert-wheel.log`) and tray icons |
+| `~/.config/devkit-convert-wheel/config.json` | button, wheel size, output folder, remembered settings |
+| `~/.cache/devkit-convert-wheel/` | log (`convert-wheel.log`) and tray icons |
 | `~/.local/share/applications/convert-wheel.desktop` | app menu entry |
 | `~/.config/autostart/convert-wheel.desktop` | start at login, with `--off` |
 | `~/.local/share/nautilus/scripts/Convert (wheel)` | Nautilus script (`Converter (roda)` on a pt-BR system) |
