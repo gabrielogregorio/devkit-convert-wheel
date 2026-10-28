@@ -82,11 +82,12 @@ Built and tested on Ubuntu 24.04 + GNOME + Nautilus. It uses the system Python, 
 |---|---|
 | `~/.config/devkit-convert-wheel/config.json` | button, wheel size, output folder, remembered settings |
 | `~/.cache/devkit-convert-wheel/` | log (`convert-wheel.log`) and tray icons |
-| `~/.local/share/applications/convert-wheel.desktop` | app menu entry |
-| `~/.config/autostart/convert-wheel.desktop` | start at login, with `--off` |
+| `~/.local/share/applications/devkit-convert-wheel.desktop` | app menu entry |
+| `~/.config/autostart/devkit-convert-wheel.desktop` | start at login, with `--off` (`./install.sh --no-autostart` skips it) |
 | `~/.local/share/nautilus/scripts/Convert (wheel)` | Nautilus script (`Converter (roda)` on a pt-BR system) |
 
-Moved the folder? Run `./install.sh` again.
+Moved the folder? Run `./install.sh` again. It also moves the files named `convert-wheel.desktop`
+(before 1.1.1) to `trash/`, so the wheel does not start twice.
 
 ## Available scripts
 
