@@ -137,6 +137,19 @@ converters or Xvfb when a job needs them. Dependabot keeps the actions up to dat
 1. In the PR, bump `VERSION` (semver: `1.1.0`, or `1.1.0-rc.1` for a pre-release).
 2. Merge into `main`. The tag and the release are created on their own.
 
+What the release is built from:
+
+| Part | Source |
+|---|---|
+| Tag | `v` + `VERSION` at the merge commit, pointing at that commit |
+| Title | `Convert Wheel vX.Y.Z` |
+| Notes | the PR title (without the `Release vX.Y.Z - ` prefix), then the PR body with the commit list that `auto-complete-fields.yml` filled in (the `[...autoGenerate]` marker is removed), then GitHub's generated notes (merged PRs, contributors, "Full Changelog" link to the previous tag) |
+| Files | `devkit-convert-wheel-X.Y.Z.tar.gz` (`git archive` of the merge commit: only tracked files) and `SHA256SUMS` |
+| Type | a version with `-` (e.g. `1.1.0-rc.1`) is a pre-release; any other becomes "latest" |
+
+If the tag already exists (the PR did not bump `VERSION`), nothing is released and the run leaves a
+warning. The PR check `VERSION is new` catches that before the merge.
+
 Issues use forms (`bug_report.yml`, `feature_request.yml`); PRs start from `pull_request_template.md`.
 
 ## What it converts
